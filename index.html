@@ -386,15 +386,20 @@
         }
 
         async function switchCamera() {
+            if (availableCameras.length <= 1) {
+                updateStatus('Only one camera available.', 'warning');
+                return;
+            }
+
             // Stop current stream
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
-            // Switch facing mode
-            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            // Switch to next camera
+            currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
             
-            // Restart camera with new facing mode
+            // Restart camera with new camera
             await startCamera();
         }
 
