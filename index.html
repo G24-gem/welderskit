@@ -380,8 +380,22 @@
                 });
                 
             } catch (error) {
-                updateStatus('Camera access denied. Please allow camera permissions.', 'warning');
+                console.error('Camera error:', error);
+                updateStatus('Camera access denied or not available. Please allow camera permissions and ensure you have a camera.', 'warning');
             }
+        }
+
+        async function switchCamera() {
+            // Stop current stream
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Switch facing mode
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            
+            // Restart camera with new facing mode
+            await startCamera();
         }
 
         function captureFrame() {
