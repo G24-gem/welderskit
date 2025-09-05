@@ -444,24 +444,35 @@
                 drawPoint(x, y, 'red', 8);
                 
                 if (referencePoints.length === 2) {
-                    const distance = calculateDistance(referencePoints[0], referencePoints[1]);
-                    pixelsPerMM = distance / referenceSize;
+                    const distanceInPixels = calculateDistance(referencePoints[0], referencePoints[1]);
+                    pixelsPerMM = distanceInPixels / referenceSize;
                     isCalibrated = true;
+                    
+                    console.log('CALIBRATION COMPLETE:');
+                    console.log('Reference distance in pixels:', distanceInPixels);
+                    console.log('Reference size in mm:', referenceSize);
+                    console.log('Calculated pixels per mm:', pixelsPerMM);
                     
                     drawLine(referencePoints[0], referencePoints[1], 'red', 3);
                     updateScaleDisplay();
-                    updateStatus('Calibrated! Now click points on your object to measure.', 'info');
+                    updateStatus(`✅ Calibrated! ${pixelsPerMM.toFixed(2)} pixels/mm. Now click points on your object.`, 'info');
+                } else {
+                    updateStatus(`Click second point on reference object (${referenceSize}mm)`, 'info');
                 }
             } else if (isCalibrated) {
                 // Measurement mode
                 measurementPoints.push({x, y});
                 drawPoint(x, y, 'blue', 6);
                 
+                console.log(`Added measurement point ${measurementPoints.length}:`, {x, y});
+                
                 if (measurementPoints.length >= 2) {
                     calculateMeasurements();
+                } else {
+                    updateStatus('Click more points to measure length and diameter', 'info');
                 }
             } else {
-                updateStatus('Please enter reference object size first.', 'warning');
+                updateStatus('Enter reference object size (in mm) first, then click two points on it to calibrate', 'warning');
             }
         }
 
