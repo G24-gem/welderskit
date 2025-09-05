@@ -359,31 +359,33 @@
             canvas.addEventListener('click', handleCanvasClick);
         }
 
-        async function startCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    } 
-                });
-                video.srcObject = stream;
-                
-                video.addEventListener('loadedmetadata', () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.style.width = video.clientWidth + 'px';
-                    canvas.style.height = video.clientHeight + 'px';
-                    
-                    document.getElementById('captureBtn').disabled = false;
-                    updateStatus('Camera started. Place your object and reference in view.', 'info');
-                });
-                
-            } catch (error) {
-                console.error('Camera error:', error);
-                updateStatus('Camera access denied or not available. Please allow camera permissions and ensure you have a camera.', 'warning');
-            }
-        }
+     async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: { exact: "environment" }, // 🔹 Force back camera
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
+        });
+        video.srcObject = stream;
+        
+        video.addEventListener('loadedmetadata', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.style.width = video.clientWidth + 'px';
+            canvas.style.height = video.clientHeight + 'px';
+            
+            document.getElementById('captureBtn').disabled = false;
+            updateStatus('Camera started (rear). Place your object and reference in view.', 'info');
+        });
+        
+    } catch (error) {
+        console.error('Camera error:', error);
+        updateStatus('Camera access denied or not available. Please allow camera permissions and ensure you have a back camera.', 'warning');
+    }
+}
+
 
         async function switchCamera() {
             if (availableCameras.length <= 1) {
@@ -663,3 +665,4 @@
     </script>
 </body>
 </html>
+
