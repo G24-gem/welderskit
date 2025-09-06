@@ -1,5 +1,4 @@
 window.addEventListener("load", () => {
-  // First: detect device width and toggle views
   if (window.innerWidth < 768) {
     document.querySelector(".mobile-content").style.display = "block";
     document.querySelector(".desktop-message").style.display = "none";
@@ -8,25 +7,22 @@ window.addEventListener("load", () => {
     document.querySelector(".desktop-message").style.display = "block";
   }
 
-  // Then: handle intro logic only for mobile
   if (window.innerWidth < 768) {
-    if (sessionStorage.getItem("introPlayed")) {
-      // Skip intro if already viewed this session
-      window.location.href = "page.html";
-    } else {
+    // Only redirect if not yet marked as played in this visit
+    if (!sessionStorage.getItem("introPlayed")) {
       sessionStorage.setItem("introPlayed", "true");
 
-      // Listen for animation end on the text
+      // Wait for animation then redirect
       const text = document.getElementById("text-home");
       if (text) {
         text.addEventListener("animationend", () => {
-          // Extra hold time after animation
-          const holdTime = 2000; // 2s
+          const holdTime = 2000; // extra time after animation
           setTimeout(() => {
             window.location.href = "page.html";
           }, holdTime);
         });
       }
     }
+    // If introPlayed already set → do nothing (let them stay on index.html)
   }
 });
