@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Industrial Measurement Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .welcome-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .text-section {
+            animation: slideInLeft 1s ease-out;
+        }
+
+        .illustration-section {
+            position: relative;
+            height: 600px;
+            animation: slideInRight 1s ease-out;
+        }
+
+        .welcome-badge {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .welcome-title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #fff 0%, #4facfe 50%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.4rem;
+            color: #b8c6db;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            animation: fadeInUp 1s ease-out 0.7s both;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out 0.9s both;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #e2e8f0;
+        }
+
+        .feature-icon {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 0.8rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            animation: fadeInUp 1s ease-out 1.1s both;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        /* 3D Illustration Styles */
+        .tool-illustration {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+        }
+
+        .tool-3d {
+            position: absolute;
+            transform-style: preserve-3d;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .pipe {
+            width: 200px;
+            height: 40px;
+            background: linear-gradient(45deg, #718096 0%, #4a5568 50%, #2d3748 100%);
+            border-radius: 20px;
+            position: absolute;
+            box-shadow: 
+                0 5px 15px rgba(0,0,0,0.3),
+                inset 0 2px 0 rgba(255,255,255,0.2),
+                inset 0 -2px 0 rgba(0,0,0,0.3);
+            top: 200px;
+            left: 100px;
+            transform: rotateY(45deg) rotateX(15deg);
+        }
+
+        .pipe::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
+            border-radius: 22px;
+            z-index: -1;
+        }
+
+        .welding-rod {
+            width: 3px;
+            height: 150px;
+            background: linear-gradient(0deg, #e53e3e 0%, #fc8181 50%, #feb2b2 100%);
+            position: absolute;
+            border-radius: 2px;
+            top: 150px;
+            right: 120px;
+            transform: rotateZ(25deg) rotateY(30deg);
+            box-shadow: 0 0 10px rgba(229, 62, 62, 0.5);
+        }
+
+        .measuring-tool {
+            width: 120px;
+            height: 20px;
+            background: linear-gradient(45deg, #f7fafc 0%, #edf2f7 50%, #e2e8f0 100%);
+            border-radius: 10px;
+            position: absolute;
+            top: 300px;
+            left: 50px;
+            transform: rotateY(-30deg) rotateX(10deg);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .measuring-tool::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: #4299e1;
+            top: 9px;
+            left: 10px;
+            border-radius: 1px;
+        }
+
+        .gear {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #fbb6ce 0%, #f687b3 50%, #ed64a6 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 100px;
+            right: 80px;
+            transform: rotateY(60deg);
+            animation: rotate 8s linear infinite;
+            box-shadow: 0 5px 20px rgba(237, 100, 166, 0.3);
+        }
+
+        .gear::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #2d3748;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+        }
+
+        .measurement-lines {
+            position: absolute;
+            top: 250px;
+            left: 150px;
+            width: 180px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #4facfe 50%, transparent 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .measurement-lines::before,
+        .measurement-lines::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #00f2fe;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00f2fe;
+        }
+
+        .measurement-lines::before {
+            left: -5px;
+            top: -4px;
+        }
+
+        .measurement-lines::after {
+            right: -5px;
+            top: -4px;
+        }
+
+        .floating-numbers {
+            position: absolute;
+            top: 180px;
+            right: 150px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #4facfe;
+            font-size: 1.2rem;
+            animation: fadeInOut 3s ease-in-out infinite;
+        }
+
+        /* Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotateY(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotateY(180deg);
+            }
+        }
+
+        @keyframes rotate {
+            from { transform: rotateY(60deg) rotateZ(0deg); }
+            to { transform: rotateY(60deg) rotateZ(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+                transform: scaleX(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scaleX(1.1);
+            }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .welcome-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .welcome-title {
+                font-size: 2.5rem;
+            }
+
+            .illustration-section {
+                height: 400px;
+                order: -1;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Stars Background -->
+    <div class="stars" id="stars"></div>
+
+    <div class="container">
+        <div class="welcome-content">
+            <!-- Text Content -->
+            <div class="text-section">
+                <div class="welcome-badge">
+                    ✨ Welcome to the Future of Measurement
+                </div>
+                
+                <h1 class="welcome-title">
+                    Precision Made
+                    <br>Simple
+                </h1>
+                
+                <p class="welcome-subtitle">
+                    Transform your industrial measurements with cutting-edge AI technology. 
+                    Measure pipes, welding tools, and equipment with camera-based precision.
+                </p>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <div class="feature-icon">📏</div>
+                        Real-time measurements in millimeters
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">📱</div>
+                        Works with any smartphone camera
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">🤖</div>
+                        AI-powered object detection
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        Instant calibration system
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        Professional accuracy guaranteed
+                    </li>
+                </ul>
+                
+                <div class="cta-buttons">
+                    <a href="measurement-tool.html" class="btn btn-primary" id="startBtn">
+                        🚀 Start Measuring
+                    </a>
+                    <a href="#tutorial" class="btn btn-secondary" id="learnBtn">
+                        📖 Quick Tutorial
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3D Illustration -->
+            <div class="illustration-section">
+                <div class="tool-illustration">
+                    <div class="tool-3d">
+                        <div class="pipe"></div>
+                        <div class="welding-rod"></div>
+                        <div class="measuring-tool"></div>
+                        <div class="gear"></div>
+                        <div class="measurement-lines"></div>
+                        <div class="floating-numbers">
+                            <div>125.6mm</div>
+                            <div style="margin-top: 10px; font-size: 1rem;">⌀ 32.4mm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create animated stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 100;
+
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random size and position
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                
+                // Random animation delay
+                star.style.animationDelay = Math.random() * 3 + 's';
+                
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Animate floating numbers
+        function animateNumbers() {
+            const numbers = document.querySelector('.floating-numbers');
+            const measurements = [
+                ['125.6mm', '⌀ 32.4mm'],
+                ['198.2mm', '⌀ 45.8mm'],
+                ['87.3mm', '⌀ 25.1mm'],
+                ['156.9mm', '⌀ 38.7mm']
+            ];
+            
+            let index = 0;
+            
+            setInterval(() => {
+                const measurement = measurements[index % measurements.length];
+                numbers.innerHTML = `
+                    <div>${measurement[0]}</div>
+                    <div style="margin-top: 10px; font-size: 1rem;">${measurement[1]}</div>
+                `;
+                index++;
+            }, 3000);
+        }
+
+        // Add click effects to buttons
+        function addButtonEffects() {
+            const buttons = document.querySelectorAll('.btn');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    // Create ripple effect
+                    const ripple = document.createElement('span');
+                    const rect = button.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255,255,255,0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        pointer-events: none;
+                    `;
+                    
+                    button.style.position = 'relative';
+                    button.style.overflow = 'hidden';
+                    button.appendChild(ripple);
+                    
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        }
+
+        // Add ripple animation CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Handle navigation
+        document.getElementById('startBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Add exit animation
+            document.body.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            document.body.style.opacity = '0';
+            document.body.style.transform = 'scale(1.05)';
+            
+            setTimeout(() => {
+                // Replace with your actual measurement tool page
+                window.location.href = 'page.html'; // Your measurement tool
+            }, 500);
+        });
+
+        document.getElementById('learnBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Smooth scroll to tutorial section or show modal
+            alert('📖 Quick Tutorial:\n\n1. Place object next to a coin\n2. Capture photo\n3. Click two points on coin (calibrate)\n4. Click points on your object\n5. Get instant measurements!');
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            animateNumbers();
+            addButtonEffects();
+            
+            // Add entrance animation
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 1s ease';
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Add mouse movement parallax effect
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 10;
+            const y = (e.clientY / window.innerHeight) * 10;
+            
+            document.querySelector('.tool-3d').style.transform = 
+                `translateX(${x}px) translateY(${y}px)`;
+        });
+    </script>
+</body>
+</html>
