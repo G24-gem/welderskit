@@ -27,17 +27,17 @@ window.addEventListener("load", () => {
   }
 });
 
-navigator.geolocation.getCurrentPosition(success, error);
+// navigator.geolocation.getCurrentPosition(success, error);
 
-function success(position) {
-  const userLat = position.coords.latitude;
-  const userLng = position.coords.longitude;
-  console.log("User Location:", userLat, userLng);
-}
+// function success(position) {
+//   const userLat = position.coords.latitude;
+//   const userLng = position.coords.longitude;
+//   console.log("User Location:", userLat, userLng);
+// }
 
-function error(err) {
-  console.warn(`ERROR(${err.code}): ${err.message}`);
-}
+// function error(err) {
+//   console.warn(`ERROR(${err.code}): ${err.message}`);
+// }
 
 
  var shops = [
