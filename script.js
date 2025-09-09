@@ -1,15 +1,3 @@
-// Load OpenCV.js dynamically
-function loadOpenCv(callback) {
-  const script = document.createElement('script');
-  script.src = 'https://docs.opencv.org/4.x/opencv.js';
-  script.onload = callback;
-  document.head.appendChild(script);
-}
-
-// Example usage: load OpenCV before using any cv.* functions
-loadOpenCv(() => {
-  console.log('OpenCV.js loaded');
-});
 
 window.addEventListener("load", () => {
   if (window.innerWidth < 768) {
