@@ -57,30 +57,42 @@ window.addEventListener("load", () => {
             canvas.addEventListener('click', handleCanvasClick);
         }
 
-        async function startCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    } 
-                });
-                video.srcObject = stream;
-                
-                video.addEventListener('loadedmetadata', () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.style.width = video.clientWidth + 'px';
-                    canvas.style.height = video.clientHeight + 'px';
-                    
-                    document.getElementById('captureBtn').disabled = false;
-                    updateStatus('Camera started. Place your object and reference in view.', 'info');
-                });
-                
-            } catch (error) {
-                updateStatus('Camera access denied. Please allow camera permissions.', 'warning');
-            }
+     async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: { ideal: "environment" }, // 🔑 force back camera
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            } 
+        });
+        video.srcObject = stream;
+        
+        video.addEventListener('loadedmetadata', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.style.width = video.clientWidth + 'px';
+            canvas.style.height = video.clientHeight + 'px';
+            
+            document.getElementById('captureBtn').disabled = false;
+            updateStatus('Back camera started. Place your object and reference in view.', 'info');
+        });
+        
+    } catch (error) {
+        updateStatus('Camera access denied or no back camera found. Falling back to front camera.', 'warning');
+
+        // fallback to front camera
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" } 
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            updateStatus('No camera available.', 'warning');
         }
+    }
+}
+
 
         function captureFrame() {
             if (video.videoWidth === 0) return;
