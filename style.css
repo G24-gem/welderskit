@@ -128,13 +128,13 @@ overflow-x: hidden;
 }
 
   #map {
-    height: 500px;   /* adjust height */
-    width: 300%;     /* full width */
-    position: relative;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin: 0 30px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    z-index: 0;
   }
 
 }
