@@ -19,6 +19,7 @@
     text-align: center;
      list-style-type: none;
     text-decoration: none;
+    
 }
 
 
@@ -32,12 +33,12 @@
     text-decoration: none;
     color: #fff;
     
+    
 }
 
 body{
     background-color:#121212 ;
-overflow-x: hidden;
-
+overflow-x: hidden !important;
 }
 
 .home-img {
@@ -111,10 +112,10 @@ overflow-x: hidden;
 }
 
 .grid-items{
-    background:#FF6B00;
+    background:#FF6B00 !important;
     border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0);
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(255, 255, 255, 0.048);
     transition: transform 0.2s; 
 
 
@@ -143,11 +144,6 @@ overflow-x: hidden;
 .menu{
   justify-content: center;
   align-items: center;
-  margin-top: 60px;
-}
-
-.title{
-position: relative;
-top: 30px;
+  margin-top: 45px;
 }
 
