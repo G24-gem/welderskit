@@ -77,7 +77,7 @@ async function generateInvoiceData(formData) {
 
 // -------------------- API Call --------------------
 async function callInvoiceGeneratorAPI(invoiceData) {
-  const API_KEY = "YOUR_REAL_API_KEY"; // put your real API key here
+  const API_KEY = "sk_Xh3mghsV7p4Evpudq6VZ1OTqRuZ2rxU0"; // put your real API key here
 
   const response = await fetch("https://invoice-generator.com", {
     method: "POST",
@@ -134,4 +134,3 @@ function sendEmail() {
   const body = "Hello, please find attached your quotation/invoice.";
   window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 }
-
