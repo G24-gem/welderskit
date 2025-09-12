@@ -167,34 +167,33 @@
                     address: formData.get("customerAddress")
                 }
             };
-        }
 
-      // Call InvoiceGenerator.com API
-async function callInvoiceGeneratorAPI(invoiceData) {
-    try {
-        const API_KEY = "sk_Xh3mghsV7p4Evpudq6VZ1OTqRuZ2rxU0"; // replace with your actual API key
+            // Call InvoiceGenerator.com API
+            async function callInvoiceGeneratorAPI(invoiceData) {
+            try {
+              const API_KEY = "sk_Xh3mghsV7p4Evpudq6VZ1OTqRuZ2rxU0"; // replace with your actual API key
 
-        const response = await fetch("https://invoice-generator.com", {
-            method: "POST",
-            headers: {
+              const response = await fetch("https://invoice-generator.com", {
+                method: "POST",
+                headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${API_KEY}`
-            },
-            body: JSON.stringify(invoiceData)
-        });
+                },
+                body: JSON.stringify(invoiceData)
+              });
 
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
+              if (!response.ok) {
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+              }
 
-        const blob = await response.blob();
-        const pdfUrl = URL.createObjectURL(blob);
-        return pdfUrl; // returns the actual PDF blob
-    } catch (error) {
-        console.error("API Error:", error);
-        throw error; // don’t fallback, fail if API fails
-    }
-}
+              const blob = await response.blob();
+              downloadPDF(blob, `${invoiceData.type || 'Invoice'}-${invoiceData.number}.pdf`);
+              // Return a blob URL for history (optional, since you download directly)
+              return URL.createObjectURL(blob);
+            } catch (error) {
+              throw error;
+            }
+            }
 
         // Display invoice history
         function displayInvoiceHistory() {
@@ -223,10 +222,19 @@ async function callInvoiceGeneratorAPI(invoiceData) {
             historyContainer.innerHTML = historyHTML;
         }
 
-        // Download invoice
-        function downloadInvoice(pdfUrl) {
-            window.open(pdfUrl, '_blank');
-        }
+       // Download automatically instead of just opening blob
+    function downloadPDF(pdfBlob, fileName) {
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName; // e.g. Invoice-1234.pdf
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url); // cleanup
+}
+
+
 
         // Delete invoice
         function deleteInvoice(invoiceId) {
@@ -288,3 +296,4 @@ async function callInvoiceGeneratorAPI(invoiceData) {
                 window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
             }
         }
+    }
