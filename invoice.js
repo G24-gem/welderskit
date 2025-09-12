@@ -18,28 +18,30 @@ async function handleFormSubmit(e) {
     const formData = new FormData(e.target);
     const invoiceData = prepareInvoiceData(formData);
 
-    // Render invoice preview HTML
-    const invoiceHTML = buildInvoiceHTML(invoiceData);
+    // ✅ Call your Flask backend instead of html2pdf
+    const response = await fetch("https://invoice-backend-lh01.onrender.com", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(invoiceData)
+    });
 
-    // Generate PDF with html2pdf.js
-    const opt = {
-      margin: 10,
-      filename: `${invoiceData.type}-${invoiceData.number}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+    if (!response.ok) throw new Error("Backend error: " + response.status);
 
-    await html2pdf().from(invoiceHTML).set(opt).save();
+    // Get PDF blob
+    const blob = await response.blob();
+    const fileName = `${invoiceData.type}-${invoiceData.number}.pdf`;
 
-    // Save to localStorage
+    // Download the PDF
+    downloadPDF(blob, fileName);
+
+    // Save invoice metadata to localStorage
     const invoiceRecord = {
       id: Date.now(),
       date: new Date().toISOString(),
       customerName: formData.get("name"),
       type: invoiceData.type,
       total: invoiceData.total,
-      fileName: opt.filename,
+      fileName: fileName,
       status: 'success',
       data: invoiceData
     };
@@ -71,48 +73,28 @@ function prepareInvoiceData(formData) {
 
   return {
     from: "Welder Business",
-    to: formData.get("name") + "<br>" + formData.get("address"),
+    to: formData.get("name") + "\n" + formData.get("address"),
     number: Math.floor(Math.random() * 10000) + 1000,
-    currency: "₦",
+    currency: "NGN",
     date: new Date().toLocaleDateString(),
+    payment_terms: "Due on receipt",
     items: items,
     total: total,
+    fields: { tax: "%", discounts: true, shipping: true },
     type: formData.get("type")
   };
 }
 
-// -------------------- Build Invoice HTML --------------------
-function buildInvoiceHTML(data) {
-  return `
-    <div style="font-family: Arial, sans-serif; padding:20px; max-width:800px;">
-      <h1 style="text-align:center;">${data.type}</h1>
-      <p><strong>Date:</strong> ${data.date}</p>
-      <p><strong>Invoice No:</strong> ${data.number}</p>
-      <p><strong>From:</strong> ${data.from}</p>
-      <p><strong>To:</strong><br>${data.to}</p>
-      <table style="width:100%; border-collapse: collapse; margin-top:20px;">
-        <thead>
-          <tr>
-            <th style="border:1px solid #000; padding:8px;">Item</th>
-            <th style="border:1px solid #000; padding:8px;">Qty</th>
-            <th style="border:1px solid #000; padding:8px;">Unit Cost</th>
-            <th style="border:1px solid #000; padding:8px;">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.items.map(item => `
-            <tr>
-              <td style="border:1px solid #000; padding:8px;">${item.name}</td>
-              <td style="border:1px solid #000; padding:8px; text-align:center;">${item.quantity}</td>
-              <td style="border:1px solid #000; padding:8px; text-align:right;">${data.currency}${item.unit_cost.toFixed(2)}</td>
-              <td style="border:1px solid #000; padding:8px; text-align:right;">${data.currency}${(item.quantity * item.unit_cost).toFixed(2)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-      <h2 style="text-align:right; margin-top:20px;">Total: ${data.currency}${data.total.toFixed(2)}</h2>
-    </div>
-  `;
+// -------------------- PDF Download --------------------
+function downloadPDF(pdfBlob, fileName) {
+  const url = URL.createObjectURL(pdfBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // -------------------- Status Messages --------------------
