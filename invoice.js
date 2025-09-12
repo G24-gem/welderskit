@@ -169,50 +169,32 @@
             };
         }
 
-        // Call InvoiceGenerator.com API
-        async function callInvoiceGeneratorAPI(invoiceData) {
-            try {
-                // Note: This is a mock implementation since InvoiceGenerator.com requires API key
-                // Replace this URL with the actual API endpoint and add your API key
-                const response = await fetch('https://invoice-generator.com/api/v1/invoice', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // 'Authorization': 'Bearer YOUR_API_KEY_HERE'
-                    },
-                    body: JSON.stringify(invoiceData)
-                });
+      // Call InvoiceGenerator.com API
+async function callInvoiceGeneratorAPI(invoiceData) {
+    try {
+        const API_KEY = "sk_Xh3mghsV7p4Evpudq6VZ1OTqRuZ2rxU0"; // replace with your actual API key
 
-                if (response.ok) {
-                    const result = await response.json();
-                    return result.url; // PDF download URL
-                } else {
-                    // Fallback: Create a mock PDF URL for demo purposes
-                    console.warn('API call failed, using fallback method');
-                    return createFallbackPDF(invoiceData);
-                }
-            } catch (error) {
-                console.error('API Error:', error);
-                // Fallback method
-                return createFallbackPDF(invoiceData);
-            }
+        const response = await fetch("https://invoice-generator.com", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${API_KEY}`
+            },
+            body: JSON.stringify(invoiceData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status} ${response.statusText}`);
         }
 
-        // Fallback PDF creation (for demo when API is not available)
-        function createFallbackPDF(invoiceData) {
-            // Create a blob URL as a placeholder
-            // In production, you would integrate with a real PDF service
-            const pdfContent = `
-                Invoice #${invoiceData.number}
-                From: ${invoiceData.from}
-                To: ${invoiceData.to}
-                Date: ${invoiceData.date}
-                Total: ₦${invoiceData.total.toFixed(2)}
-            `;
-            
-            const blob = new Blob([pdfContent], { type: 'text/plain' });
-            return URL.createObjectURL(blob);
-        }
+        const blob = await response.blob();
+        const pdfUrl = URL.createObjectURL(blob);
+        return pdfUrl; // returns the actual PDF blob
+    } catch (error) {
+        console.error("API Error:", error);
+        throw error; // don’t fallback, fail if API fails
+    }
+}
 
         // Display invoice history
         function displayInvoiceHistory() {
