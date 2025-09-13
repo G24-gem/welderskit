@@ -19,7 +19,7 @@ async function handleFormSubmit(e) {
     const invoiceData = prepareInvoiceData(formData);
 
     // ✅ Call your Flask backend instead of html2pdf
-    const response = await fetch("https://invoice-backend-lh01.onrender.com", {
+    const response = await fetch("https://invoice-backend-lh01.onrender.com/api/invoice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(invoiceData)
