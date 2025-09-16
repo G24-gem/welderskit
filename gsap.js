@@ -122,41 +122,6 @@ gsap.from("#slide6", {
   }
 });
 
-//slide in from the left
-gsap.from("#slide7", {
-  x: -150,
-  opacity: 0,
-  duration: 2,
-  scrollTrigger: {
-    trigger: "#slide5",
-    start: "top 80%",
-    toggleActions: "play none none none"
-  }
-});
-
-// Slide in from the RIGHT
-gsap.from("#slide8", {
-  x: 150,
-  opacity: 0,
-  duration: 2,
-  scrollTrigger: {
-    trigger: "#slide4",
-    start: "top 80%",
-    toggleActions: "play none none none"
-  }
-});
-
-//slide in from the left
-gsap.from("#slide9", {
-  x: -150,
-  opacity: 0,
-  duration: 2,
-  scrollTrigger: {
-    trigger: "#slide5",
-    start: "top 80%",
-    toggleActions: "play none none none"
-  }
-});
 
 gsap.to("#animate",{
     opacity:1,
