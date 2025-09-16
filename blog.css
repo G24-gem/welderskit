@@ -24,6 +24,11 @@
     
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain; /* ensures images don’t stretch */
+}
 
 
 @media (max-width:600px){
@@ -49,9 +54,32 @@ body{
 #lang-switcher{
   display: flex;
   gap: 5px;
-  font-size: 12px;
+  font-size: 14px;
   justify-content: center;
   color: #FF6B00;
 }
 
+
+
+  .d-flex {
+    flex-direction: column; /* stack image + text vertically */
+    text-align: center;
+  }
+
+  .d-flex > div {
+    flex: unset !important; /* remove forced flex:2, flex:1 */
+    width: 100%;
+  }
+
+  h5 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 14px;
+  }
+
 }
+
+
