@@ -58,7 +58,8 @@ gsap.from("#slide", {
   scrollTrigger: {
     trigger: "#slide",
     start: "top 80%",  // when element is 80% down viewport
-    toggleActions: "play none none none"
+    toggleActions: "play none none none",
+    delay:2
   }
 });
 
@@ -70,7 +71,8 @@ gsap.from("#slide2", {
   scrollTrigger: {
     trigger: "#slide2",
     start: "top 80%",
-    toggleActions: "play none none none"
+    toggleActions: "play none none none",
+    delay:2
   }
 });
 
@@ -82,7 +84,8 @@ gsap.from("#slide3", {
   scrollTrigger: {
     trigger: "#slide3",
     start: "top 80%",
-    toggleActions: "play none none none"
+    toggleActions: "play none none none",
+    delay:2
   }
 });
 
@@ -94,7 +97,8 @@ gsap.from("#slide4", {
   scrollTrigger: {
     trigger: "#slide4",
     start: "top 80%",
-    toggleActions: "play none none none"
+    toggleActions: "play none none none",
+    delay:2
   }
 });
 
@@ -118,7 +122,8 @@ gsap.from("#slide6", {
   scrollTrigger: {
     trigger: "#slide4",
     start: "top 80%",
-    toggleActions: "play none none none"
+    toggleActions: "play none none none",
+    delay:2
   }
 });
 
