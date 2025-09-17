@@ -54,11 +54,15 @@ body{
 #lang-switcher{
   display: flex;
   gap: 5px;
-  font-size: 14px;
+  font-size: 5px;
   justify-content: center;
-  color: #FF6B00;
-}
+  color: #FF6B00 !important;
+  }
 
+  #lang-switcher p{
+    color: #FF6B00;
+  }
+ 
 
 
   .d-flex {
@@ -78,8 +82,9 @@ body{
 
   p {
     font-size: 14px;
+    font-family: "Poppins", sans-serif;
+    color: #555;
   }
 
+
 }
-
-
