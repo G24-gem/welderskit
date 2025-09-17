@@ -21,6 +21,7 @@
     text-align: center;
      list-style-type: none;
     text-decoration: none;
+    overflow-x: hidden !important;
     
 }
 
@@ -33,6 +34,7 @@
     box-sizing: border-box;
     list-style-type: none;
     text-decoration: none;
+    overflow-x: hidden !important;
 
     
     
