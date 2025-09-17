@@ -200,7 +200,19 @@ font-family: "Poppins", sans-serif;
   top: 50px;
 }
 
+a{
+  text-decoration: none;
+  list-style-type: none;
+  color: #000000;
+}
 
+a:visited{
+  color: #ffffff;
+}
+
+a:focus,a:hover{
+  color: #000000;
+}
 
 }
 
