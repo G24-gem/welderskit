@@ -34,15 +34,11 @@
     box-sizing: border-box;
     list-style-type: none;
     text-decoration: none;
-   
-
-    
-    
 }
 
 body{
     background-color:#121212 ;
-font-family: "Poppins", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 450;
   font-style: normal;
   text-decoration: none;
@@ -208,11 +204,11 @@ a{
 }
 
 a:visited{
-  color: #ffffff;
+  color: #000000;
 }
 
 a:focus,a:hover{
-  color: #000000;
+  color: #fff;
 }
 
 }
