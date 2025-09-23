@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welder's Kit - Defect Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #121212;
+            color: #ffffff;
+            font-family: "Arial", sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 107, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 107, 0, 0.08) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid rgba(255, 107, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #FF6B00;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+        }
+
+        .header p {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .detection-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .camera-section {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+        }
+
+        .camera-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 
+                0 0 30px rgba(255, 107, 0, 0.3),
+                inset 0 0 0 3px rgba(255, 107, 0, 0.5);
+            background: #1a1a1a;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .controls-section {
+            flex: 0 0 300px;
+            min-width: 280px;
+        }
+
+        .status-card {
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-card h3 {
+            color: #FF6B00;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.active {
+            background: #28a745;
+        }
+
+        .status-indicator.detecting {
+            background: #FF6B00;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #status {
+            font-size: 1rem;
+            color: #cccccc;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .detection-stats {
+            background: rgba(255, 107, 0, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-label {
+            color: #cccccc;
+        }
+
+        .stat-value {
+            color: #FF6B00;
+            font-weight: bold;
+        }
+
+        .controls-card {
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls-card h3 {
+            color: #FF6B00;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #cccccc;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #FF6B00;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #FF6B00;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+        }
+
+        .slider-value {
+            position: absolute;
+            right: 0;
+            top: -25px;
+            color: #FF6B00;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #FF6B00, #e55a00);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .detection-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .log-defect {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .log-confidence {
+            color: #FF6B00;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .detection-container {
+                flex-direction: column;
+            }
+
+            .controls-section {
+                flex: none;
+                width: 100%;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .status-card,
+            .controls-card {
+                padding: 20px;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 107, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #FF6B00;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom scrollbar */
+        .detection-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .detection-log::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .detection-log::-webkit-scrollbar-thumb {
+            background: #FF6B00;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welder's Kit</h1>
+            <p>Live Weld Defect Detection System</p>
+        </div>
+
+        <div class="detection-container">
+            <div class="camera-section">
+                <div class="camera-wrapper">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="status-card">
+                    <h3>
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        Detection Status
+                    </h3>
+                    <div id="status">Initializing camera...</div>
+                    
+                    <div class="detection-stats" id="stats" style="display: none;">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Detections:</span>
+                            <span class="stat-value" id="totalDetections">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Current Frame:</span>
+                            <span class="stat-value" id="currentFrame">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">API Status:</span>
+                            <span class="stat-value" id="apiStatus">Connecting...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-card">
+                    <h3>Detection Settings</h3>
+                    
+                    <div class="control-group">
+                        <label for="confidenceSlider">Confidence Threshold:</label>
+                        <div class="slider-container">
+                            <input type="range" id="confidenceSlider" class="slider" min="10" max="90" value="50">
+                            <span class="slider-value" id="confidenceValue">50%</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="intervalSlider">Detection Interval:</label>
+                        <div class="slider-container">
+                            <input type="range" id="intervalSlider" class="slider" min="200" max="2000" value="800" step="100">
+                            <span class="slider-value" id="intervalValue">800ms</span>
+                        </div>
+                    </div>
+
+                    <button class="btn" id="toggleBtn" onclick="toggleDetection()">
+                        Pause Detection
+                    </button>
+                </div>
+
+                <div class="status-card">
+                    <h3>Detection Log</h3>
+                    <div class="detection-log" id="detectionLog">
+                        <div class="log-entry">
+                            <div class="log-time">System initialized</div>
+                            <div>Waiting for camera...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const backendDetectUrl = "https://your-backend.example.com/api/detect"; // Update with your backend URL
+        const clientSecret = "a-secret-only-your-frontends-know"; // Same as FRONTEND_SECRET env
+
+        // DOM elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const stats = document.getElementById('stats');
+        const detectionLog = document.getElementById('detectionLog');
+        const confidenceSlider = document.getElementById('confidenceSlider');
+        const intervalSlider = document.getElementById('intervalSlider');
+        const toggleBtn = document.getElementById('toggleBtn');
+
+        // State variables
+        let isDetecting = true;
+        let lastSent = 0;
+        let SEND_INTERVAL = 800;
+        let confidenceThreshold = 0.5;
+        let totalDetections = 0;
+        let currentFrame = 0;
+        let apiConnected = false;
+
+        // Initialize sliders
+        confidenceSlider.addEventListener('input', (e) => {
+            confidenceThreshold = e.target.value / 100;
+            document.getElementById('confidenceValue').textContent = e.target.value + '%';
+        });
+
+        intervalSlider.addEventListener('input', (e) => {
+            SEND_INTERVAL = parseInt(e.target.value);
+            document.getElementById('intervalValue').textContent = e.target.value + 'ms';
+        });
+
+        // Start camera
+        async function startCamera() {
+            try {
+                updateStatus("Requesting camera access...", "detecting");
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "environment",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }, 
+                    audio: false 
+                });
+                
+                video.srcObject = stream;
+                await video.play();
+                
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                
+                updateStatus("Camera started. Detecting defects...", "active");
+                stats.style.display = 'block';
+                
+                // Test API connection
+                await testAPIConnection();
+                
+                requestAnimationFrame(tick);
+            } catch (err) {
+                console.error("Camera error:", err);
+                updateStatus(`Camera error: ${err.message}`, "error");
+                addLogEntry("Camera Error", err.message);
+            }
+        }
+
+        async function testAPIConnection() {
+            try {
+                // Simple test to see if backend is reachable
+                const response = await fetch(backendDetectUrl.replace('/detect', '/health'), {
+                    method: 'GET',
+                    headers: { 'x-client-secret': clientSecret }
+                });
+                
+                if (response.ok) {
+                    apiConnected = true;
+                    document.getElementById('apiStatus').textContent = 'Connected';
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                apiConnected = false;
+                document.getElementById('apiStatus').textContent = 'Offline';
+                console.warn('API test failed:', error);
+            }
+        }
+
+        // Main detection loop
+        async function tick() {
+            if (!isDetecting) {
+                requestAnimationFrame(tick);
+                return;
+            }
+
+            // Draw video to canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            currentFrame++;
+            document.getElementById('currentFrame').textContent = currentFrame;
+
+            const now = Date.now();
+            if (now - lastSent > SEND_INTERVAL) {
+                lastSent = now;
+                try {
+                    await sendFrameAndDraw();
+                } catch (err) {
+                    console.error("Detection error:", err);
+                    updateStatus("API error - Check connection", "error");
+                    addLogEntry("API Error", err.message);
+                }
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        // Send frame to backend for analysis
+        async function sendFrameAndDraw() {
+            if (!apiConnected) {
+                updateStatus("API offline - Cannot detect defects", "error");
+                return;
+            }
+
+            // Get compressed blob from canvas
+            const blob = await new Promise(resolve => 
+                canvas.toBlob(resolve, 'image/jpeg', 0.7)
+            );
+
+            const formData = new FormData();
+            formData.append('file', blob, 'frame.jpg');
+
+            const response = await fetch(backendDetectUrl, {
+                method: 'POST',
+                headers: { 'x-client-secret': clientSecret },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Backend error: ${response.status} ${errorText}`);
+            }
+
+            const data = await response.json();
+            drawPredictions(data);
+        }
+
+        // Draw detection results
+        function drawPredictions(result) {
+            // Clear canvas and redraw video frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            if (!result || !result.predictions || result.predictions.length === 0) {
+                updateStatus("No defects detected", "active");
+                return;
+            }
+
+            // Filter predictions by confidence threshold
+            const filteredPredictions = result.predictions.filter(
+                pred => pred.confidence >= confidenceThreshold
+            );
+
+            if (filteredPredictions.length === 0) {
+                updateStatus("No high-confidence defects detected", "active");
+                return;
+            }
+
+            totalDetections += filteredPredictions.length;
+            document.getElementById('totalDetections').textContent = totalDetections;
+            
+            updateStatus(`⚠️ Detected ${filteredPredictions.length} defect(s)`, "detecting");
+
+            // Draw each prediction
+            filteredPredictions.forEach(pred => {
+                drawPredictionBox(pred);
+                addLogEntry("Defect Found", `${pred.class} (${Math.round(pred.confidence * 100)}%)`);
+            });
+        }
+
+        // Draw individual prediction box
+        function drawPredictionBox(pred) {
+            // Convert prediction coordinates (assuming center-based format)
+            const w = (pred.width / 100) * canvas.width;
+            const h = (pred.height / 100) * canvas.height;
+            const cx = (pred.x / 100) * canvas.width;
+            const cy = (pred.y / 100) * canvas.height;
+            const x = cx - w / 2;
+            const y = cy - h / 2;
+
+            // Draw bounding box
+            ctx.strokeStyle = '#FF6B00';
+            ctx.lineWidth = Math.max(3, canvas.width / 200);
+            ctx.strokeRect(x, y, w, h);
+
+            // Draw label background
+            const label = `${pred.class} ${Math.round(pred.confidence * 100)}%`;
+            ctx.fillStyle = '#FF6B00';
+            ctx.font = `bold ${Math.max(14, canvas.width / 40)}px Arial`;
+            
+            const textMetrics = ctx.measureText(label);
+            const textWidth = textMetrics.width;
+            const textHeight = 20;
+
+            ctx.fillRect(x, y - textHeight - 5, textWidth + 10, textHeight + 5);
+
+            // Draw label text
+            ctx.fillStyle = '#000';
+            ctx.fillText(label, x + 5, y - 8);
+
+            // Draw confidence indicator
+            const confidenceWidth = (pred.confidence * (textWidth + 10));
+            ctx.fillStyle = 'rgba(255, 107, 0, 0.3)';
+            ctx.fillRect(x, y - 3, confidenceWidth, 3);
+        }
+
+        // Update status display
+        function updateStatus(message, type) {
+            status.textContent = message;
+            statusIndicator.className = `status-indicator ${type}`;
+        }
+
+        // Add entry to detection log
+        function addLogEntry(type, message) {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            
+            logEntry.innerHTML = `
+                <div class="log-time">${timeStr}</div>
+                <div class="log-defect">${type}:</div>
+                <div class="log-confidence">${message}</div>
+            `;
+            
+            detectionLog.insertBefore(logEntry, detectionLog.firstChild);
+            
+            // Keep only last 50 entries
+            while (detectionLog.children.length > 50) {
+                detectionLog.removeChild(detectionLog.lastChild);
+            }
+        }
+
+        // Toggle detection
+        function toggleDetection() {
+            isDetecting = !isDetecting;
+            toggleBtn.textContent = isDetecting ? 'Pause Detection' : 'Resume Detection';
+            
+            if (isDetecting) {
+                updateStatus("Detection resumed", "active");
+                addLogEntry("System", "Detection resumed");
+            } else {
+                updateStatus("Detection paused", "error");
+                addLogEntry("System", "Detection paused");
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            addLogEntry("System", "Application initialized");
+            startCamera();
+        });
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                isDetecting = false;
+                updateStatus("Detection paused (tab hidden)", "error");
+            } else {
+                isDetecting = true;
+                updateStatus("Detection resumed (tab visible)", "active");
+            }
+        });
+    </script>
+</body>
+</html>
