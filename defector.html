@@ -660,9 +660,9 @@
                         x = (pred.x * canvas.width) - (w / 2);
                         y = (pred.y * canvas.height) - (h / 2);
                     } else {
-                        // Pixel coordinates
-                        const scaleX = canvas.width / result.image?.width || 1;
-                        const scaleY = canvas.height / result.image?.height || 1;
+                        // Pixel coordinates - assume they're already in correct scale
+                        const scaleX = 1;
+                        const scaleY = 1;
                         
                         w = pred.width * scaleX;
                         h = pred.height * scaleY;
