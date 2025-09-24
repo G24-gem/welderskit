@@ -41,6 +41,8 @@ img {
     list-style-type: none;
     text-decoration: none;
     overflow-x: hidden !important;
+     color: #000000 !important;
+    background: #fff !important;
 }
 
 body{
@@ -51,7 +53,7 @@ body{
   text-decoration: none;
   list-style-type: none;
   color: #000000 !important;
-  background: #fff;
+  background: #fff !important;
 }
 
 #lang-switcher{
