@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welder's Kit - Photo Defect Detection</title>
     <link rel="stylesheet" href="defector.css">
+    <script defer src="defector.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Welder's Kit</h1>
-            <p>Photo-based Weld Defect Detection System</p>
+            <p>Analyze welding defects quickly</p>
         </div>
 
         <div class="detection-container">
@@ -22,13 +23,13 @@
                 
                 <div class="camera-controls">
                     <button class="btn secondary" id="captureBtn" onclick="capturePhoto()">
-                        📸 Capture Photo
+                        Capture Photo
                     </button>
                     <button class="btn" id="analyzeBtn" onclick="analyzePhoto()" disabled>
-                        🔍 Analyze Defects
+                         Analyze Defects
                     </button>
                     <button class="btn danger" id="retakeBtn" onclick="retakePhoto()" style="display:none;">
-                        🔄 Retake Photo
+                         Retake Photo
                     </button>
                 </div>
 
