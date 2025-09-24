@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welder's Kit - Live Defect Detection</title>
+    <title>Welder's Kit - Photo Defect Detection</title>
     <style>
         * {
             margin: 0;
@@ -85,6 +85,7 @@
                 0 0 30px rgba(255, 107, 0, 0.3),
                 inset 0 0 0 3px rgba(255, 107, 0, 0.5);
             background: #1a1a1a;
+            margin-bottom: 20px;
         }
 
         #video {
@@ -95,12 +96,15 @@
         }
 
         #canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
+            height: auto;
+            display: none;
+            background: #000;
+        }
+
+        .camera-controls {
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         .controls-section {
@@ -142,6 +146,10 @@
             background: #FF6B00;
         }
 
+        .status-indicator.processing {
+            background: #ffc107;
+        }
+
         @keyframes pulse {
             0% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.1); }
@@ -178,87 +186,19 @@
             font-weight: bold;
         }
 
-        .controls-card {
-            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-            border: 1px solid rgba(255, 107, 0, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .controls-card h3 {
-            color: #FF6B00;
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-        }
-
-        .control-group {
-            margin-bottom: 20px;
-        }
-
-        .control-group label {
-            display: block;
-            color: #cccccc;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .slider-container {
-            position: relative;
-        }
-
-        .slider {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #333;
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #FF6B00;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
-        }
-
-        .slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #FF6B00;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
-        }
-
-        .slider-value {
-            position: absolute;
-            right: 0;
-            top: -25px;
-            color: #FF6B00;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
         .btn {
             background: linear-gradient(145deg, #FF6B00, #e55a00);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 15px 25px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
-            width: 100%;
+            margin: 5px;
             box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+            min-width: 120px;
         }
 
         .btn:hover {
@@ -277,37 +217,113 @@
             box-shadow: none;
         }
 
-        .detection-log {
-            max-height: 200px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+        .btn.secondary {
+            background: linear-gradient(145deg, #28a745, #218838);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn.danger {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn.danger:hover {
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .results-card {
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+
+        .results-card h3 {
+            color: #FF6B00;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+        }
+
+        .defect-item {
+            background: rgba(255, 107, 0, 0.1);
+            border-left: 4px solid #FF6B00;
             padding: 15px;
-            margin-top: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
         }
 
-        .log-entry {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 107, 0, 0.2);
-            font-size: 0.9rem;
+        .defect-type {
+            font-weight: bold;
+            color: #FF6B00;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
         }
 
-        .log-entry:last-child {
-            border-bottom: none;
-        }
-
-        .log-time {
-            color: #888;
-            font-size: 0.8rem;
-        }
-
-        .log-defect {
-            color: #ff4757;
+        .defect-confidence {
+            color: #28a745;
             font-weight: bold;
         }
 
-        .log-confidence {
-            color: #FF6B00;
+        .defect-location {
+            color: #cccccc;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .file-upload {
+            margin-top: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            background: linear-gradient(145deg, #6c757d, #5a6268);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 107, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #FF6B00;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Mobile responsiveness */
@@ -330,39 +346,14 @@
             }
 
             .status-card,
-            .controls-card {
+            .results-card {
                 padding: 20px;
             }
-        }
 
-        /* Loading animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 107, 0, 0.3);
-            border-radius: 50%;
-            border-top-color: #FF6B00;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Custom scrollbar */
-        .detection-log::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .detection-log::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-
-        .detection-log::-webkit-scrollbar-thumb {
-            background: #FF6B00;
-            border-radius: 3px;
+            .btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -370,7 +361,7 @@
     <div class="container">
         <div class="header">
             <h1>Welder's Kit</h1>
-            <p>Live Weld Defect Detection System</p>
+            <p>Photo-based Weld Defect Detection System</p>
         </div>
 
         <div class="detection-container">
@@ -379,64 +370,56 @@
                     <video id="video" autoplay playsinline muted></video>
                     <canvas id="canvas"></canvas>
                 </div>
+                
+                <div class="camera-controls">
+                    <button class="btn secondary" id="captureBtn" onclick="capturePhoto()">
+                        📸 Capture Photo
+                    </button>
+                    <button class="btn" id="analyzeBtn" onclick="analyzePhoto()" disabled>
+                        🔍 Analyze Defects
+                    </button>
+                    <button class="btn danger" id="retakeBtn" onclick="retakePhoto()" style="display:none;">
+                        🔄 Retake Photo
+                    </button>
+                </div>
+
+                <div class="file-upload">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept="image/*" onchange="loadImage(event)">
+                        <label for="fileInput" class="file-input-label">
+                            📁 Upload Image Instead
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div class="controls-section">
                 <div class="status-card">
                     <h3>
-                        <span class="status-indicator" id="statusIndicator"></span>
-                        Detection Status
+                        <span class="status-indicator active" id="statusIndicator"></span>
+                        Status
                     </h3>
-                    <div id="status">Initializing camera...</div>
+                    <div id="status">Camera ready. Capture a photo to analyze defects.</div>
                     
                     <div class="detection-stats" id="stats" style="display: none;">
                         <div class="stat-item">
-                            <span class="stat-label">Total Detections:</span>
-                            <span class="stat-value" id="totalDetections">0</span>
+                            <span class="stat-label">Defects Found:</span>
+                            <span class="stat-value" id="totalDefects">0</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Current Frame:</span>
-                            <span class="stat-value" id="currentFrame">0</span>
+                            <span class="stat-label">Highest Confidence:</span>
+                            <span class="stat-value" id="highestConfidence">-</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-label">API Status:</span>
-                            <span class="stat-value" id="apiStatus">Connecting...</span>
+                            <span class="stat-value" id="apiStatus">Ready</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="controls-card">
-                    <h3>Detection Settings</h3>
-                    
-                    <div class="control-group">
-                        <label for="confidenceSlider">Confidence Threshold:</label>
-                        <div class="slider-container">
-                            <input type="range" id="confidenceSlider" class="slider" min="10" max="90" value="50">
-                            <span class="slider-value" id="confidenceValue">50%</span>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="intervalSlider">Detection Interval:</label>
-                        <div class="slider-container">
-                            <input type="range" id="intervalSlider" class="slider" min="200" max="2000" value="1200" step="100">
-                            <span class="slider-value" id="intervalValue">1200ms</span>
-                        </div>
-                    </div>
-
-                    <button class="btn" id="toggleBtn" onclick="toggleDetection()">
-                        Pause Detection
-                    </button>
-                </div>
-
-                <div class="status-card">
-                    <h3>Detection Log</h3>
-                    <div class="detection-log" id="detectionLog">
-                        <div class="log-entry">
-                            <div class="log-time">System initialized</div>
-                            <div>Waiting for camera...</div>
-                        </div>
-                    </div>
+                <div class="results-card" id="resultsCard" style="display: none;">
+                    <h3>🚨 Detected Defects</h3>
+                    <div id="defectsList"></div>
                 </div>
             </div>
         </div>
@@ -453,44 +436,26 @@
         const ctx = canvas.getContext('2d');
         const status = document.getElementById('status');
         const statusIndicator = document.getElementById('statusIndicator');
-        const stats = document.getElementById('stats');
-        const detectionLog = document.getElementById('detectionLog');
-        const confidenceSlider = document.getElementById('confidenceSlider');
-        const intervalSlider = document.getElementById('intervalSlider');
-        const toggleBtn = document.getElementById('toggleBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const resultsCard = document.getElementById('resultsCard');
+        const defectsList = document.getElementById('defectsList');
 
         // State variables
-        let isDetecting = true;
-        let lastSent = 0;
-        let SEND_INTERVAL = 1200; // Increased for better performance
-        let confidenceThreshold = 0.5;
-        let totalDetections = 0;
-        let currentFrame = 0;
-        let apiConnected = false;
-        let isProcessing = false; // Prevent overlapping API calls
+        let capturedImage = null;
+        let isAnalyzing = false;
 
-        // Initialize sliders
-        confidenceSlider.addEventListener('input', (e) => {
-            confidenceThreshold = e.target.value / 100;
-            document.getElementById('confidenceValue').textContent = e.target.value + '%';
-        });
-
-        intervalSlider.addEventListener('input', (e) => {
-            SEND_INTERVAL = parseInt(e.target.value);
-            document.getElementById('intervalValue').textContent = e.target.value + 'ms';
-        });
-
-        // Start camera with optimized settings
+        // Start camera
         async function startCamera() {
             try {
-                updateStatus("Requesting camera access...", "detecting");
+                updateStatus("Starting camera...", "detecting");
                 
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: "environment",
-                        width: { ideal: 640, max: 1280 },
-                        height: { ideal: 480, max: 720 },
-                        frameRate: { ideal: 15, max: 24 }
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     }, 
                     audio: false 
                 });
@@ -498,269 +463,280 @@
                 video.srcObject = stream;
                 await video.play();
                 
-                // Set canvas size to match video but cap at reasonable dimensions
-                const videoWidth = video.videoWidth || 640;
-                const videoHeight = video.videoHeight || 480;
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
                 
-                // Scale down if too large
-                const maxWidth = 800;
-                const maxHeight = 600;
-                
-                if (videoWidth > maxWidth || videoHeight > maxHeight) {
-                    const scale = Math.min(maxWidth / videoWidth, maxHeight / videoHeight);
-                    canvas.width = videoWidth * scale;
-                    canvas.height = videoHeight * scale;
-                } else {
-                    canvas.width = videoWidth;
-                    canvas.height = videoHeight;
-                }
-                
-                updateStatus("Camera started. Detecting defects...", "active");
-                stats.style.display = 'block';
-                
-                // Test API connection
-                await testAPIConnection();
-                
-                requestAnimationFrame(tick);
+                updateStatus("Camera ready. Capture a photo to analyze defects.", "active");
             } catch (err) {
                 console.error("Camera error:", err);
                 updateStatus(`Camera error: ${err.message}`, "error");
-                addLogEntry("Camera Error", err.message);
             }
         }
 
-        async function testAPIConnection() {
-            try {
-                const response = await fetch(backendDetectUrl.replace('/detect', '/health'), {
-                    method: 'GET',
-                    headers: { 'x-client-secret': clientSecret }
-                });
-                
-                if (response.ok) {
-                    apiConnected = true;
-                    document.getElementById('apiStatus').textContent = 'Connected';
-                } else {
-                    throw new Error('API not responding');
-                }
-            } catch (error) {
-                apiConnected = false;
-                document.getElementById('apiStatus').textContent = 'Offline';
-                console.warn('API test failed:', error);
-            }
-        }
-
-        // Main detection loop with performance optimization
-        async function tick() {
-            if (!isDetecting) {
-                requestAnimationFrame(tick);
+        // Capture photo from camera
+        function capturePhoto() {
+            if (!video.videoWidth) {
+                updateStatus("Camera not ready", "error");
                 return;
             }
 
-            // Draw video to canvas
+            // Draw video frame to canvas
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            currentFrame++;
-            document.getElementById('currentFrame').textContent = currentFrame;
-
-            const now = Date.now();
-            // Only send if not already processing and interval passed
-            if (now - lastSent > SEND_INTERVAL && !isProcessing) {
-                lastSent = now;
-                try {
-                    await sendFrameAndDraw();
-                } catch (err) {
-                    console.error("Detection error:", err);
-                    updateStatus("API error - Check connection", "error");
-                    addLogEntry("API Error", err.message);
-                    isProcessing = false;
-                }
-            }
-
-            requestAnimationFrame(tick);
+            
+            // Hide video, show canvas
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            
+            // Update UI
+            captureBtn.style.display = 'none';
+            analyzeBtn.disabled = false;
+            retakeBtn.style.display = 'inline-block';
+            
+            // Store the captured image
+            capturedImage = canvas.toDataURL('image/jpeg', 0.8);
+            
+            updateStatus("Photo captured! Click 'Analyze Defects' to detect issues.", "active");
         }
 
-        // Send frame to backend for analysis
-        async function sendFrameAndDraw() {
-            if (!apiConnected || isProcessing) {
-                if (!apiConnected) {
-                    updateStatus("API offline - Cannot detect defects", "error");
-                }
-                return;
-            }
+        // Retake photo
+        function retakePhoto() {
+            // Show video, hide canvas
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            
+            // Reset UI
+            captureBtn.style.display = 'inline-block';
+            analyzeBtn.disabled = true;
+            retakeBtn.style.display = 'none';
+            resultsCard.style.display = 'none';
+            
+            // Clear captured image
+            capturedImage = null;
+            
+            updateStatus("Camera ready. Capture a photo to analyze defects.", "active");
+        }
 
-            isProcessing = true;
+        // Load image from file upload
+        function loadImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Resize canvas to fit image
+                    const maxWidth = 800;
+                    const maxHeight = 600;
+                    let { width, height } = img;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        const scale = Math.min(maxWidth / width, maxHeight / height);
+                        width *= scale;
+                        height *= scale;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Draw image to canvas
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Show canvas, hide video
+                    video.style.display = 'none';
+                    canvas.style.display = 'block';
+                    
+                    // Update UI
+                    captureBtn.style.display = 'none';
+                    analyzeBtn.disabled = false;
+                    retakeBtn.style.display = 'inline-block';
+                    
+                    // Store the image
+                    capturedImage = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    updateStatus("Image loaded! Click 'Analyze Defects' to detect issues.", "active");
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Analyze captured photo
+        async function analyzePhoto() {
+            if (!capturedImage || isAnalyzing) return;
+
+            isAnalyzing = true;
+            analyzeBtn.disabled = true;
+            updateStatus("Analyzing image for defects...", "processing");
+            analyzeBtn.innerHTML = '<span class="loading"></span>Analyzing...';
 
             try {
-                // Get compressed blob from canvas with lower quality for faster processing
-                const blob = await new Promise(resolve => 
-                    canvas.toBlob(resolve, 'image/jpeg', 0.5)
-                );
+                // Convert data URL to blob
+                const response = await fetch(capturedImage);
+                const blob = await response.blob();
 
                 const formData = new FormData();
-                formData.append('file', blob, 'frame.jpg');
+                formData.append('file', blob, 'captured_image.jpg');
 
-                const response = await fetch(backendDetectUrl, {
+                // Send to API
+                const apiResponse = await fetch(backendDetectUrl, {
                     method: 'POST',
                     headers: { 'x-client-secret': clientSecret },
                     body: formData
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Backend error: ${response.status} ${errorText}`);
+                if (!apiResponse.ok) {
+                    throw new Error(`API error: ${apiResponse.status}`);
                 }
 
-                const data = await response.json();
-                drawPredictions(data);
+                const result = await apiResponse.json();
+                console.log("Detection result:", result);
+                
+                processResults(result);
+
+            } catch (error) {
+                console.error("Analysis error:", error);
+                updateStatus(`Analysis failed: ${error.message}`, "error");
             } finally {
-                isProcessing = false;
+                isAnalyzing = false;
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '🔍 Analyze Defects';
             }
         }
 
-        // Draw detection results with debug logging
-        function drawPredictions(result) {
-            console.log("Full API result:", result);
-            
-            // Clear canvas and redraw video frame
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            if (!result || !result.predictions || result.predictions.length === 0) {
-                updateStatus("No defects detected", "active");
-                console.log("No predictions in result");
+        // Process and display results
+        function processResults(result) {
+            if (!result.predictions || result.predictions.length === 0) {
+                updateStatus("✅ No defects detected in this image!", "active");
+                resultsCard.style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
                 return;
             }
 
-            console.log("Raw predictions:", result.predictions);
+            const predictions = result.predictions;
+            console.log("Processing predictions:", predictions);
 
-            // Filter predictions by confidence threshold
-            const filteredPredictions = result.predictions.filter(
-                pred => pred.confidence >= confidenceThreshold
-            );
+            // Filter by confidence (>= 30%)
+            const validPredictions = predictions.filter(pred => pred.confidence >= 0.3);
 
-            console.log("Filtered predictions:", filteredPredictions);
-            console.log("Confidence threshold:", confidenceThreshold);
-
-            if (filteredPredictions.length === 0) {
-                updateStatus("No high-confidence defects detected", "active");
+            if (validPredictions.length === 0) {
+                updateStatus("No high-confidence defects detected.", "active");
+                resultsCard.style.display = 'none';
                 return;
             }
 
-            totalDetections += filteredPredictions.length;
-            document.getElementById('totalDetections').textContent = totalDetections;
-            
-            updateStatus(`⚠️ Detected ${filteredPredictions.length} defect(s)`, "detecting");
+            // Draw bounding boxes on the image
+            drawDetections(validPredictions);
 
-            // Draw each prediction with debug info
-            filteredPredictions.forEach((pred, index) => {
-                console.log(`Drawing prediction ${index}:`, pred);
-                drawPredictionBox(pred);
-                addLogEntry("Defect Found", `${pred.class} (${Math.round(pred.confidence * 100)}%)`);
+            // Update status and stats
+            updateStatus(`⚠️ Found ${validPredictions.length} defect(s)!`, "detecting");
+            
+            document.getElementById('totalDefects').textContent = validPredictions.length;
+            document.getElementById('highestConfidence').textContent = 
+                Math.round(Math.max(...validPredictions.map(p => p.confidence)) * 100) + '%';
+            document.getElementById('apiStatus').textContent = 'Complete';
+            document.getElementById('stats').style.display = 'block';
+
+            // Display defect list
+            displayDefectsList(validPredictions);
+            resultsCard.style.display = 'block';
+        }
+
+        // Draw detection boxes on the captured image
+        function drawDetections(predictions) {
+            predictions.forEach((pred, index) => {
+                console.log(`Drawing detection ${index}:`, pred);
+                
+                // Handle different coordinate formats
+                let x, y, w, h;
+
+                // Roboflow typically returns center coordinates
+                if (pred.x !== undefined && pred.y !== undefined) {
+                    if (pred.x <= 1 && pred.y <= 1) {
+                        // Normalized coordinates (0-1)
+                        w = pred.width * canvas.width;
+                        h = pred.height * canvas.height;
+                        x = (pred.x * canvas.width) - (w / 2);
+                        y = (pred.y * canvas.height) - (h / 2);
+                    } else {
+                        // Pixel coordinates
+                        const scaleX = canvas.width / result.image?.width || 1;
+                        const scaleY = canvas.height / result.image?.height || 1;
+                        
+                        w = pred.width * scaleX;
+                        h = pred.height * scaleY;
+                        x = (pred.x * scaleX) - (w / 2);
+                        y = (pred.y * scaleY) - (h / 2);
+                    }
+                }
+
+                // Ensure valid coordinates
+                x = Math.max(0, x);
+                y = Math.max(0, y);
+                w = Math.min(w, canvas.width - x);
+                h = Math.min(h, canvas.height - y);
+
+                console.log(`Drawing box at: x=${x}, y=${y}, w=${w}, h=${h}`);
+
+                // Color coding
+                const colors = {
+                    'crack': '#FF0000',
+                    'porosity': '#FF6600', 
+                    'undercut': '#FFFF00',
+                    'burn-through': '#FF3300',
+                    'defect': '#FF6B00'
+                };
+
+                const color = colors[pred.class?.toLowerCase()] || colors['defect'];
+
+                // Draw bounding box
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.strokeRect(x, y, w, h);
+
+                // Draw corner markers
+                const cornerSize = 20;
+                ctx.fillStyle = color;
+                
+                // Corners
+                ctx.fillRect(x - 2, y - 2, cornerSize, 6);
+                ctx.fillRect(x - 2, y - 2, 6, cornerSize);
+                ctx.fillRect(x + w - cornerSize + 2, y - 2, cornerSize, 6);
+                ctx.fillRect(x + w - 2, y - 2, 6, cornerSize);
+
+                // Label with background
+                const label = `${pred.class || 'Defect'}: ${Math.round(pred.confidence * 100)}%`;
+                ctx.font = 'bold 18px Arial';
+                const textWidth = ctx.measureText(label).width;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(x, y - 30, textWidth + 12, 25);
+                
+                ctx.fillStyle = color;
+                ctx.fillText(label, x + 6, y - 8);
             });
         }
 
-        // Simplified drawing function with debug logging and test rectangle
-        function drawPredictionBox(pred) {
-            console.log("Drawing box for prediction:", pred);
+        // Display list of detected defects
+        function displayDefectsList(predictions) {
+            defectsList.innerHTML = '';
             
-            // ALWAYS draw a test rectangle first to verify drawing works
-            ctx.strokeStyle = '#FF0000';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(20, 20, 100, 80);
-            ctx.fillStyle = '#FF0000';
-            ctx.font = '14px Arial';
-            ctx.fillText('TEST BOX', 25, 40);
-            console.log("Drew test rectangle");
-            
-            // Try multiple coordinate formats that Roboflow might use
-            let x, y, w, h;
-            
-            // Format 1: Normalized coordinates (0-1) with center point
-            if (pred.x <= 1 && pred.y <= 1 && pred.width <= 1 && pred.height <= 1) {
-                console.log("Using normalized coordinates");
-                w = pred.width * canvas.width;
-                h = pred.height * canvas.height;
-                x = (pred.x * canvas.width) - (w / 2);
-                y = (pred.y * canvas.height) - (h / 2);
-            }
-            // Format 2: Pixel coordinates with center point  
-            else if (pred.x && pred.y && pred.width && pred.height) {
-                console.log("Using pixel coordinates");
-                const scaleX = canvas.width / video.videoWidth;
-                const scaleY = canvas.height / video.videoHeight;
+            predictions.forEach((pred, index) => {
+                const defectDiv = document.createElement('div');
+                defectDiv.className = 'defect-item';
                 
-                w = pred.width * scaleX;
-                h = pred.height * scaleY;
-                x = (pred.x * scaleX) - (w / 2);
-                y = (pred.y * scaleY) - (h / 2);
-            }
-            // Format 3: Try x1,y1,x2,y2 format
-            else if (pred.x1 !== undefined && pred.y1 !== undefined && pred.x2 !== undefined && pred.y2 !== undefined) {
-                console.log("Using x1,y1,x2,y2 format");
-                x = pred.x1;
-                y = pred.y1;
-                w = pred.x2 - pred.x1;
-                h = pred.y2 - pred.y1;
-            }
-            // Format 4: Fallback - draw at a visible position for testing
-            else {
-                console.log("Unknown format, drawing fallback rectangle");
-                x = canvas.width * 0.3;
-                y = canvas.height * 0.3;
-                w = canvas.width * 0.2;
-                h = canvas.height * 0.2;
-            }
-
-            console.log(`Drawing box at: x=${x}, y=${y}, w=${w}, h=${h}`);
-            console.log(`Canvas size: ${canvas.width}x${canvas.height}`);
-
-            // Ensure coordinates are valid numbers
-            if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
-                console.error("Invalid coordinates:", {x, y, w, h});
-                return;
-            }
-
-            // Color coding for different defect types
-            const defectColors = {
-                'crack': '#FF0000',
-                'porosity': '#FF6600',
-                'undercut': '#FFFF00',
-                'burn-through': '#FF3300',
-                'defect': '#00FF00'
-            };
-
-            const color = defectColors[pred.class?.toLowerCase()] || defectColors['defect'];
-
-            // Draw the actual bounding box with thick, visible lines
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 4;
-            ctx.strokeRect(x, y, w, h);
-            
-            // Draw corner markers for better visibility
-            const cornerSize = 15;
-            ctx.fillStyle = color;
-            
-            // Top-left corner
-            ctx.fillRect(x - 2, y - 2, cornerSize, 4);
-            ctx.fillRect(x - 2, y - 2, 4, cornerSize);
-            
-            // Top-right corner
-            ctx.fillRect(x + w - cornerSize + 2, y - 2, cornerSize, 4);
-            ctx.fillRect(x + w - 2, y - 2, 4, cornerSize);
-
-            // Draw label with background
-            const label = `${pred.class || 'defect'}: ${Math.round((pred.confidence || 0) * 100)}%`;
-            ctx.font = 'bold 16px Arial';
-            const textWidth = ctx.measureText(label).width;
-            
-            // Label background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.fillRect(x, y - 25, textWidth + 10, 20);
-            
-            // Label text
-            ctx.fillStyle = color;
-            ctx.fillText(label, x + 5, y - 8);
-            
-            console.log(`Drew detection box: ${label} at ${x},${y} size ${w}x${h}`);
+                defectDiv.innerHTML = `
+                    <div class="defect-type">${pred.class || 'Unknown Defect'}</div>
+                    <div class="defect-confidence">Confidence: ${Math.round(pred.confidence * 100)}%</div>
+                    <div class="defect-location">
+                        Location: (${Math.round(pred.x || 0)}, ${Math.round(pred.y || 0)})
+                        Size: ${Math.round(pred.width || 0)} × ${Math.round(pred.height || 0)}
+                    </div>
+                `;
+                
+                defectsList.appendChild(defectDiv);
+            });
         }
 
         // Update status display
@@ -769,73 +745,9 @@
             statusIndicator.className = `status-indicator ${type}`;
         }
 
-        // Add entry to detection log
-        function addLogEntry(type, message) {
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString();
-            
-            logEntry.innerHTML = `
-                <div class="log-time">${timeStr}</div>
-                <div class="log-defect">${type}:</div>
-                <div class="log-confidence">${message}</div>
-            `;
-            
-            detectionLog.insertBefore(logEntry, detectionLog.firstChild);
-            
-            // Keep only last 50 entries
-            while (detectionLog.children.length > 50) {
-                detectionLog.removeChild(detectionLog.lastChild);
-            }
-        }
-
-        // Toggle detection
-        function toggleDetection() {
-            isDetecting = !isDetecting;
-            toggleBtn.textContent = isDetecting ? 'Pause Detection' : 'Resume Detection';
-            
-            if (isDetecting) {
-                updateStatus("Detection resumed", "active");
-                addLogEntry("System", "Detection resumed");
-            } else {
-                updateStatus("Detection paused", "error");
-                addLogEntry("System", "Detection paused");
-                isProcessing = false;
-            }
-        }
-
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
-            addLogEntry("System", "Application initialized");
             startCamera();
-            
-            // Set initial interval value
-            document.getElementById('intervalValue').textContent = SEND_INTERVAL + 'ms';
-        });
-
-        // Handle page visibility change for better performance
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                isDetecting = false;
-                updateStatus("Detection paused (tab hidden)", "error");
-            } else if (toggleBtn.textContent === 'Pause Detection') {
-                isDetecting = true;
-                updateStatus("Detection resumed (tab visible)", "active");
-            }
-        });
-
-        // Add error handling for network issues
-        window.addEventListener('online', () => {
-            addLogEntry("System", "Network connection restored");
-            testAPIConnection();
-        });
-
-        window.addEventListener('offline', () => {
-            addLogEntry("System", "Network connection lost");
-            apiConnected = false;
-            document.getElementById('apiStatus').textContent = 'Offline';
         });
     </script>
 </body>
