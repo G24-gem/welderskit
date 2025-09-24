@@ -192,7 +192,7 @@ body{
   box-shadow: gray 0px 0px 20px;
   margin: 0 auto;
   position: relative;
-  top: 200px;
+  top: 40px;
   color: #000;
  
 }
@@ -210,12 +210,14 @@ body{
   position: relative;
   top: 20px;
   font-size: 22px;
+  
 }
 
 
 .table-content>ul{
    display: block !important;
    color:#000000 !important;
+   
 }
 
 .table-content>ul>li>a{
@@ -223,6 +225,7 @@ body{
   text-align: center !important;
   position: relative;
   top: 50px;
+  left: -15px;
 }
 
 a{
