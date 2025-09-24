@@ -65,7 +65,7 @@ body{
   }
 
   #lang-switcher p{
-    color: #FF6B00;
+    color: #FF6B00 !important;
   }
  
 
