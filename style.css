@@ -64,7 +64,7 @@
 
 
 body{
-    background-color:#121212 ;
+    background-color:#121212 !important;
   font-family: "Poppins", sans-serif;
   font-weight: 450;
   font-style: normal;
@@ -194,6 +194,7 @@ body{
   position: relative;
   top: 200px;
   color: #000;
+ 
 }
 
 .table-content{
@@ -219,7 +220,7 @@ body{
 
 .table-content>ul>li>a{
   display: block;
-  text-align: center;
+  text-align: center !important;
   position: relative;
   top: 50px;
 }
