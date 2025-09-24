@@ -442,135 +442,158 @@
         </div>
     </div>
 
-    <script>
-        // Configuration
-        const backendDetectUrl = "https://defector-backend.onrender.com/api/detect"; // Update with your backend URL
-        const clientSecret = "welderskit"; // Same as FRONTEND_SECRET env
+  <script>
+    // Configuration
+    const backendDetectUrl = "https://defector-backend.onrender.com/api/detect"; // Update with your backend URL
+    const clientSecret = "welderskit"; // Same as FRONTEND_SECRET env
 
-        // DOM elements
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const status = document.getElementById('status');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const stats = document.getElementById('stats');
-        const detectionLog = document.getElementById('detectionLog');
-        const confidenceSlider = document.getElementById('confidenceSlider');
-        const intervalSlider = document.getElementById('intervalSlider');
-        const toggleBtn = document.getElementById('toggleBtn');
+    // DOM elements
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const stats = document.getElementById('stats');
+    const detectionLog = document.getElementById('detectionLog');
+    const confidenceSlider = document.getElementById('confidenceSlider');
+    const intervalSlider = document.getElementById('intervalSlider');
+    const toggleBtn = document.getElementById('toggleBtn');
 
-        // State variables
-        let isDetecting = true;
-        let lastSent = 0;
-        let SEND_INTERVAL = 800;
-        let confidenceThreshold = 0.5;
-        let totalDetections = 0;
-        let currentFrame = 0;
-        let apiConnected = false;
+    // State variables
+    let isDetecting = true;
+    let lastSent = 0;
+    let SEND_INTERVAL = 1200; // Increased for better performance
+    let confidenceThreshold = 0.5;
+    let totalDetections = 0;
+    let currentFrame = 0;
+    let apiConnected = false;
+    let isProcessing = false; // Prevent overlapping API calls
 
-        // Initialize sliders
-        confidenceSlider.addEventListener('input', (e) => {
-            confidenceThreshold = e.target.value / 100;
-            document.getElementById('confidenceValue').textContent = e.target.value + '%';
-        });
+    // Initialize sliders
+    confidenceSlider.addEventListener('input', (e) => {
+        confidenceThreshold = e.target.value / 100;
+        document.getElementById('confidenceValue').textContent = e.target.value + '%';
+    });
 
-        intervalSlider.addEventListener('input', (e) => {
-            SEND_INTERVAL = parseInt(e.target.value);
-            document.getElementById('intervalValue').textContent = e.target.value + 'ms';
-        });
+    intervalSlider.addEventListener('input', (e) => {
+        SEND_INTERVAL = parseInt(e.target.value);
+        document.getElementById('intervalValue').textContent = e.target.value + 'ms';
+    });
 
-        // Start camera
-        async function startCamera() {
-            try {
-                updateStatus("Requesting camera access...", "detecting");
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }, 
-                    audio: false 
-                });
-                
-                video.srcObject = stream;
-                await video.play();
-                
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                
-                updateStatus("Camera started. Detecting defects...", "active");
-                stats.style.display = 'block';
-                
-                // Test API connection
-                await testAPIConnection();
-                
-                requestAnimationFrame(tick);
-            } catch (err) {
-                console.error("Camera error:", err);
-                updateStatus(`Camera error: ${err.message}`, "error");
-                addLogEntry("Camera Error", err.message);
+    // Start camera with optimized settings
+    async function startCamera() {
+        try {
+            updateStatus("Requesting camera access...", "detecting");
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 640, max: 1280 }, // Reduced for better performance
+                    height: { ideal: 480, max: 720 },
+                    frameRate: { ideal: 15, max: 24 } // Lower frame rate for smoother performance
+                }, 
+                audio: false 
+            });
+            
+            video.srcObject = stream;
+            await video.play();
+            
+            // Set canvas size to match video but cap at reasonable dimensions
+            const videoWidth = video.videoWidth || 640;
+            const videoHeight = video.videoHeight || 480;
+            
+            // Scale down if too large
+            const maxWidth = 800;
+            const maxHeight = 600;
+            
+            if (videoWidth > maxWidth || videoHeight > maxHeight) {
+                const scale = Math.min(maxWidth / videoWidth, maxHeight / videoHeight);
+                canvas.width = videoWidth * scale;
+                canvas.height = videoHeight * scale;
+            } else {
+                canvas.width = videoWidth;
+                canvas.height = videoHeight;
             }
-        }
-
-        async function testAPIConnection() {
-            try {
-                // Simple test to see if backend is reachable
-                const response = await fetch(backendDetectUrl.replace('/detect', '/health'), {
-                    method: 'GET',
-                    headers: { 'x-client-secret': clientSecret }
-                });
-                
-                if (response.ok) {
-                    apiConnected = true;
-                    document.getElementById('apiStatus').textContent = 'Connected';
-                } else {
-                    throw new Error('API not responding');
-                }
-            } catch (error) {
-                apiConnected = false;
-                document.getElementById('apiStatus').textContent = 'Offline';
-                console.warn('API test failed:', error);
-            }
-        }
-
-        // Main detection loop
-        async function tick() {
-            if (!isDetecting) {
-                requestAnimationFrame(tick);
-                return;
-            }
-
-            // Draw video to canvas
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            currentFrame++;
-            document.getElementById('currentFrame').textContent = currentFrame;
-
-            const now = Date.now();
-            if (now - lastSent > SEND_INTERVAL) {
-                lastSent = now;
-                try {
-                    await sendFrameAndDraw();
-                } catch (err) {
-                    console.error("Detection error:", err);
-                    updateStatus("API error - Check connection", "error");
-                    addLogEntry("API Error", err.message);
-                }
-            }
-
+            
+            updateStatus("Camera started. Detecting defects...", "active");
+            stats.style.display = 'block';
+            
+            // Test API connection
+            await testAPIConnection();
+            
             requestAnimationFrame(tick);
+        } catch (err) {
+            console.error("Camera error:", err);
+            updateStatus(`Camera error: ${err.message}`, "error");
+            addLogEntry("Camera Error", err.message);
+        }
+    }
+
+    async function testAPIConnection() {
+        try {
+            // Simple test to see if backend is reachable
+            const response = await fetch(backendDetectUrl.replace('/detect', '/health'), {
+                method: 'GET',
+                headers: { 'x-client-secret': clientSecret }
+            });
+            
+            if (response.ok) {
+                apiConnected = true;
+                document.getElementById('apiStatus').textContent = 'Connected';
+            } else {
+                throw new Error('API not responding');
+            }
+        } catch (error) {
+            apiConnected = false;
+            document.getElementById('apiStatus').textContent = 'Offline';
+            console.warn('API test failed:', error);
+        }
+    }
+
+    // Main detection loop with performance optimization
+    async function tick() {
+        if (!isDetecting) {
+            requestAnimationFrame(tick);
+            return;
         }
 
-        // Send frame to backend for analysis
-        async function sendFrameAndDraw() {
+        // Draw video to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        currentFrame++;
+        document.getElementById('currentFrame').textContent = currentFrame;
+
+        const now = Date.now();
+        // Only send if not already processing and interval passed
+        if (now - lastSent > SEND_INTERVAL && !isProcessing) {
+            lastSent = now;
+            try {
+                await sendFrameAndDraw();
+            } catch (err) {
+                console.error("Detection error:", err);
+                updateStatus("API error - Check connection", "error");
+                addLogEntry("API Error", err.message);
+                isProcessing = false; // Reset processing flag on error
+            }
+        }
+
+        requestAnimationFrame(tick);
+    }
+
+    // Send frame to backend for analysis
+    async function sendFrameAndDraw() {
+        if (!apiConnected || isProcessing) {
             if (!apiConnected) {
                 updateStatus("API offline - Cannot detect defects", "error");
-                return;
             }
+            return;
+        }
 
-            // Get compressed blob from canvas
+        isProcessing = true;
+
+        try {
+            // Get compressed blob from canvas with lower quality for faster processing
             const blob = await new Promise(resolve => 
-                canvas.toBlob(resolve, 'image/jpeg', 0.7)
+                canvas.toBlob(resolve, 'image/jpeg', 0.5) // Reduced quality for speed
             );
 
             const formData = new FormData();
@@ -580,6 +603,7 @@
                 method: 'POST',
                 headers: { 'x-client-secret': clientSecret },
                 body: formData,
+                timeout: 10000 // 10 second timeout
             });
 
             if (!response.ok) {
@@ -589,135 +613,224 @@
 
             const data = await response.json();
             drawPredictions(data);
+        } finally {
+            isProcessing = false;
+        }
+    }
+
+    // Draw detection results with correct coordinate conversion
+    function drawPredictions(result) {
+        // Clear canvas and redraw video frame
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        if (!result || !result.predictions || result.predictions.length === 0) {
+            updateStatus("No defects detected", "active");
+            return;
         }
 
-        // Draw detection results
-        function drawPredictions(result) {
-            // Clear canvas and redraw video frame
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Filter predictions by confidence threshold
+        const filteredPredictions = result.predictions.filter(
+            pred => pred.confidence >= confidenceThreshold
+        );
 
-            if (!result || !result.predictions || result.predictions.length === 0) {
-                updateStatus("No defects detected", "active");
-                return;
-            }
-
-            // Filter predictions by confidence threshold
-            const filteredPredictions = result.predictions.filter(
-                pred => pred.confidence >= confidenceThreshold
-            );
-
-            if (filteredPredictions.length === 0) {
-                updateStatus("No high-confidence defects detected", "active");
-                return;
-            }
-
-            totalDetections += filteredPredictions.length;
-            document.getElementById('totalDetections').textContent = totalDetections;
-            
-            updateStatus(`⚠️ Detected ${filteredPredictions.length} defect(s)`, "detecting");
-
-            // Draw each prediction
-            filteredPredictions.forEach(pred => {
-                drawPredictionBox(pred);
-                addLogEntry("Defect Found", `${pred.class} (${Math.round(pred.confidence * 100)}%)`);
-            });
+        if (filteredPredictions.length === 0) {
+            updateStatus("No high-confidence defects detected", "active");
+            return;
         }
 
-        // Draw individual prediction box
-        function drawPredictionBox(pred) {
-            // Convert prediction coordinates (assuming center-based format)
-            const w = (pred.width / 100) * canvas.width;
-            const h = (pred.height / 100) * canvas.height;
-            const cx = (pred.x / 100) * canvas.width;
-            const cy = (pred.y / 100) * canvas.height;
-            const x = cx - w / 2;
-            const y = cy - h / 2;
+        totalDetections += filteredPredictions.length;
+        document.getElementById('totalDetections').textContent = totalDetections;
+        
+        updateStatus(`⚠️ Detected ${filteredPredictions.length} defect(s)`, "detecting");
 
-            // Draw bounding box
-            ctx.strokeStyle = '#FF6B00';
-            ctx.lineWidth = Math.max(3, canvas.width / 200);
-            ctx.strokeRect(x, y, w, h);
-
-            // Draw label background
-            const label = `${pred.class} ${Math.round(pred.confidence * 100)}%`;
-            ctx.fillStyle = '#FF6B00';
-            ctx.font = `bold ${Math.max(14, canvas.width / 40)}px Arial`;
-            
-            const textMetrics = ctx.measureText(label);
-            const textWidth = textMetrics.width;
-            const textHeight = 20;
-
-            ctx.fillRect(x, y - textHeight - 5, textWidth + 10, textHeight + 5);
-
-            // Draw label text
-            ctx.fillStyle = '#000';
-            ctx.fillText(label, x + 5, y - 8);
-
-            // Draw confidence indicator
-            const confidenceWidth = (pred.confidence * (textWidth + 10));
-            ctx.fillStyle = 'rgba(255, 107, 0, 0.3)';
-            ctx.fillRect(x, y - 3, confidenceWidth, 3);
-        }
-
-        // Update status display
-        function updateStatus(message, type) {
-            status.textContent = message;
-            statusIndicator.className = `status-indicator ${type}`;
-        }
-
-        // Add entry to detection log
-        function addLogEntry(type, message) {
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString();
-            
-            logEntry.innerHTML = `
-                <div class="log-time">${timeStr}</div>
-                <div class="log-defect">${type}:</div>
-                <div class="log-confidence">${message}</div>
-            `;
-            
-            detectionLog.insertBefore(logEntry, detectionLog.firstChild);
-            
-            // Keep only last 50 entries
-            while (detectionLog.children.length > 50) {
-                detectionLog.removeChild(detectionLog.lastChild);
-            }
-        }
-
-        // Toggle detection
-        function toggleDetection() {
-            isDetecting = !isDetecting;
-            toggleBtn.textContent = isDetecting ? 'Pause Detection' : 'Resume Detection';
-            
-            if (isDetecting) {
-                updateStatus("Detection resumed", "active");
-                addLogEntry("System", "Detection resumed");
-            } else {
-                updateStatus("Detection paused", "error");
-                addLogEntry("System", "Detection paused");
-            }
-        }
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', () => {
-            addLogEntry("System", "Application initialized");
-            startCamera();
+        // Draw each prediction
+        filteredPredictions.forEach(pred => {
+            drawPredictionBox(pred);
+            addLogEntry("Defect Found", `${pred.class} (${Math.round(pred.confidence * 100)}%)`);
         });
+    }
 
-        // Handle page visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                isDetecting = false;
-                updateStatus("Detection paused (tab hidden)", "error");
-            } else {
-                isDetecting = true;
-                updateStatus("Detection resumed (tab visible)", "active");
-            }
-        });
-    </script>
+    // Fixed coordinate conversion for Roboflow predictions
+    function drawPredictionBox(pred) {
+        // Roboflow returns coordinates as pixels relative to the original image
+        // We need to scale them to our canvas size
+        
+        let x, y, w, h;
+        
+        // Check if coordinates are normalized (0-1) or pixel values
+        if (pred.x <= 1 && pred.y <= 1 && pred.width <= 1 && pred.height <= 1) {
+            // Normalized coordinates (0-1)
+            x = (pred.x - pred.width / 2) * canvas.width;
+            y = (pred.y - pred.height / 2) * canvas.height;
+            w = pred.width * canvas.width;
+            h = pred.height * canvas.height;
+        } else {
+            // Pixel coordinates - scale to canvas
+            const scaleX = canvas.width / video.videoWidth;
+            const scaleY = canvas.height / video.videoHeight;
+            
+            x = (pred.x - pred.width / 2) * scaleX;
+            y = (pred.y - pred.height / 2) * scaleY;
+            w = pred.width * scaleX;
+            h = pred.height * scaleY;
+        }
+
+        // Ensure coordinates are within canvas bounds
+        x = Math.max(0, Math.min(x, canvas.width - w));
+        y = Math.max(0, Math.min(y, canvas.height - h));
+        w = Math.min(w, canvas.width - x);
+        h = Math.min(h, canvas.height - y);
+
+        // Color coding for different defect types
+        const defectColors = {
+            'crack': '#FF0000',           // Red
+            'porosity': '#FF6600',        // Orange
+            'undercut': '#FFFF00',        // Yellow
+            'burn-through': '#FF3300',    // Red-orange
+            'incomplete-penetration': '#FF9900', // Light orange
+            'slag-inclusion': '#FF00FF',  // Magenta
+            'defect': '#FF6B00'          // Default orange
+        };
+
+        const color = defectColors[pred.class.toLowerCase()] || defectColors['defect'];
+
+        // Draw bounding box with thicker lines
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(2, canvas.width / 300);
+        ctx.strokeRect(x, y, w, h);
+
+        // Draw corner markers for better visibility
+        const cornerSize = Math.max(8, canvas.width / 100);
+        ctx.fillStyle = color;
+        
+        // Top-left corner
+        ctx.fillRect(x - 2, y - 2, cornerSize, 4);
+        ctx.fillRect(x - 2, y - 2, 4, cornerSize);
+        
+        // Top-right corner
+        ctx.fillRect(x + w - cornerSize + 2, y - 2, cornerSize, 4);
+        ctx.fillRect(x + w - 2, y - 2, 4, cornerSize);
+        
+        // Bottom-left corner
+        ctx.fillRect(x - 2, y + h - 2, cornerSize, 4);
+        ctx.fillRect(x - 2, y + h - cornerSize + 2, 4, cornerSize);
+        
+        // Bottom-right corner
+        ctx.fillRect(x + w - cornerSize + 2, y + h - 2, cornerSize, 4);
+        ctx.fillRect(x + w - 2, y + h - cornerSize + 2, 4, cornerSize);
+
+        // Draw label with better styling
+        const label = `${pred.class} ${Math.round(pred.confidence * 100)}%`;
+        const fontSize = Math.max(12, canvas.width / 50);
+        ctx.font = `bold ${fontSize}px Arial`;
+        
+        const textMetrics = ctx.measureText(label);
+        const textWidth = textMetrics.width;
+        const textHeight = fontSize + 4;
+
+        // Position label above or below box depending on space
+        const labelY = y > textHeight + 10 ? y - 5 : y + h + textHeight + 5;
+
+        // Draw label background with rounded corners effect
+        ctx.fillStyle = color;
+        ctx.fillRect(x, labelY - textHeight, textWidth + 10, textHeight + 4);
+        
+        // Draw semi-transparent overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(x, labelY - textHeight, textWidth + 10, textHeight + 4);
+
+        // Draw label text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(label, x + 5, labelY - 2);
+
+        // Draw confidence indicator bar
+        const confidenceBarWidth = Math.min(textWidth + 10, w);
+        const confidenceWidth = pred.confidence * confidenceBarWidth;
+        
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.6;
+        ctx.fillRect(x, y + h + 2, confidenceWidth, 3);
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(x + confidenceWidth, y + h + 2, confidenceBarWidth - confidenceWidth, 3);
+        ctx.globalAlpha = 1.0;
+    }
+
+    // Update status display
+    function updateStatus(message, type) {
+        status.textContent = message;
+        statusIndicator.className = `status-indicator ${type}`;
+    }
+
+    // Add entry to detection log
+    function addLogEntry(type, message) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+        
+        logEntry.innerHTML = `
+            <div class="log-time">${timeStr}</div>
+            <div class="log-defect">${type}:</div>
+            <div class="log-confidence">${message}</div>
+        `;
+        
+        detectionLog.insertBefore(logEntry, detectionLog.firstChild);
+        
+        // Keep only last 50 entries
+        while (detectionLog.children.length > 50) {
+            detectionLog.removeChild(detectionLog.lastChild);
+        }
+    }
+
+    // Toggle detection
+    function toggleDetection() {
+        isDetecting = !isDetecting;
+        toggleBtn.textContent = isDetecting ? 'Pause Detection' : 'Resume Detection';
+        
+        if (isDetecting) {
+            updateStatus("Detection resumed", "active");
+            addLogEntry("System", "Detection resumed");
+        } else {
+            updateStatus("Detection paused", "error");
+            addLogEntry("System", "Detection paused");
+            isProcessing = false; // Reset processing flag when pausing
+        }
+    }
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', () => {
+        addLogEntry("System", "Application initialized");
+        startCamera();
+        
+        // Set initial interval value
+        document.getElementById('intervalValue').textContent = SEND_INTERVAL + 'ms';
+    });
+
+    // Handle page visibility change for better performance
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            isDetecting = false;
+            updateStatus("Detection paused (tab hidden)", "error");
+        } else if (toggleBtn.textContent === 'Pause Detection') {
+            isDetecting = true;
+            updateStatus("Detection resumed (tab visible)", "active");
+        }
+    });
+
+    // Add error handling for network issues
+    window.addEventListener('online', () => {
+        addLogEntry("System", "Network connection restored");
+        testAPIConnection();
+    });
+
+    window.addEventListener('offline', () => {
+        addLogEntry("System", "Network connection lost");
+        apiConnected = false;
+        document.getElementById('apiStatus').textContent = 'Offline';
+    });
+</script>
 </body>
 </html>
