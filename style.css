@@ -165,6 +165,16 @@ body{
   font-weight: 300;
   font-style: normal;
 }
+#header2{
+  position: absolute;
+  margin: 80px 10px;
+  left: 12px;
+  color: #fff;
+   font-family: "Funnel Display", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
 
 #menu-grid-main{
   position: relative;
@@ -241,6 +251,7 @@ a:visited{
 a:focus,a:hover{
   color: #fff;
 }
+
 
 }
 
