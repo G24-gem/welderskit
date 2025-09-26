@@ -12,7 +12,7 @@ window.addEventListener("load", () => {
 
       // Fallback redirect (e.g. 5 seconds after load, even if animation fails)
       const fallbackTimer = setTimeout(() => {
-        window.location.href = "page.html";
+        window.location.href = "login.html";
       }, 5000);
 
       if (text) {
@@ -20,7 +20,7 @@ window.addEventListener("load", () => {
           clearTimeout(fallbackTimer); // cancel fallback
           const holdTime = 2000; // extra time after animation
           setTimeout(() => {
-            window.location.href = "page.html";
+            window.location.href = "login.html";
           }, holdTime);
         });
       }
